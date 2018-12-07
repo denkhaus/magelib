@@ -8,7 +8,7 @@ import (
 	"github.com/juju/errors"
 	"github.com/denkhaus/logging"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
-	"bitbucket.org/denkhaus/metamage/lib/common"
+	"github.com/denkhaus/magelib/common"
 )
 
 type GitRepository struct {

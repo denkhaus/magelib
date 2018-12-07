@@ -5,6 +5,7 @@ import (
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"gopkg.in/pipe.v2"
+	"fmt"
 	"path/filepath"
 	"os"
 )
@@ -16,6 +17,7 @@ var (
 	GoInstall = sh.RunCmd("go", "install")
 	GoUpdate  = sh.RunCmd("go", "get", "-u")
 	GoGet     = sh.RunCmd("go", "get")
+	GoEnvOut  = sh.OutCmd("go", "env")
 )
 
 func PipeOutCmd(fn OutCmdFunc, args ...string) pipe.Pipe {
@@ -58,4 +60,19 @@ func InDirectory(path string, fn func() error)(err error){
 	}(oldPath)
 
 	return fn()
+}
+
+func InGoPackageDir(pkg string, fn func() error) error{
+	path:= fmt.Sprintf("%s/src/%s", GoEnvValue("GOPATH"), pkg)
+	return InDirectory(path, fn) 
+}
+
+func GoEnvValue(value string) string{
+	out, err := GoEnvOut(value)
+	HandleError(err)
+	if out == ""{
+		HandleError(errors.Errorf("%s is undefined", value))
+	}
+
+	return out
 }

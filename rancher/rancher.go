@@ -3,7 +3,7 @@ package rancher
 import (
 	"fmt"
 
-	"bitbucket.org/denkhaus/metamage/lib/common"
+	"github.com/denkhaus/magelib/common"
 	"github.com/magefile/mage/sh"
 )
 
