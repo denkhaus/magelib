@@ -1,11 +1,14 @@
 package docker
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/denkhaus/logging"
 	"github.com/denkhaus/magelib/common"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/juju/errors"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
@@ -39,22 +42,32 @@ func Build(moduleDir, tag string) error {
 }
 
 func ImageDigestLocal(tag string) (string, error) {
-	digest, err := Out("inspect",
-		"--format", "{{index .RepoDigests 0}}",
-		tag,
-	)
-
+	cli, err := client.NewClientWithOpts(client.WithVersion("1.37"))
 	if err != nil {
-		// image has no digest yet
-		// because digest is dependent on the registry provider, it must get pushed first.
-		return "", nil
+		return "", errors.Annotate(err, "NewEnvClient")
 	}
 
-	if strings.Contains(digest, "@") {
-		return strings.Split(digest, "@")[1], err
+	images, err := cli.ImageList(context.Background(), types.ImageListOptions{})
+	if err != nil {
+		return "", errors.Annotate(err, "ImageList")
 	}
 
-	return digest, err
+	for _, image := range images {
+		for _, t := range image.RepoTags {
+			if t == tag {
+				if len(image.RepoDigests) > 0 {
+					digest := image.RepoDigests[0]
+					if strings.Contains(digest, "@") {
+						return strings.Split(digest, "@")[1], err
+					}
+
+					return "", err
+				}
+			}
+		}
+	}
+
+	return "", err
 }
 
 func ImageDigestRemote(tag string) (string, error) {
