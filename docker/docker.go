@@ -2,7 +2,6 @@ package docker
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/denkhaus/logging"
 	"github.com/denkhaus/magelib/common"
@@ -47,14 +46,7 @@ func ImageDigestLocal(tag string) (string, error) {
 
 func ImageDigestRemote(tag string) (string, error) {
 	mg.Deps(ensureCrane)
-
-	digest, err := CraneDigestOut(tag)
-	if err != nil &&
-		strings.Contains(digest, "MANIFEST_UNKNOWN") {
-		return "", nil
-	}
-
-	return digest, err
+	return CraneDigestOut(tag)
 }
 
 func Push(tag string) error {
@@ -69,11 +61,7 @@ func PushOnDemand(tag string) error {
 	}
 
 	digestRemote, err := ImageDigestRemote(tag)
-	if err != nil {
-		return errors.Annotate(err, "ImageDigestRemote")
-	}
-
-	if digestLocal == digestRemote {
+	if err == nil && digestLocal == digestRemote {
 		logging.Infof("remote image %s is in sync with local version", tag)
 		return nil
 	}
