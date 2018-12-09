@@ -12,7 +12,7 @@ import (
 
 var (
 	Out            = sh.OutCmd("docker")
-	CraneDigestOut = sh.OutCmd("craner", "digest")
+	CraneDigestOut = sh.OutCmd("crane", "digest")
 )
 
 func ContainerNameByLabel(label string) string {
@@ -49,6 +49,7 @@ func ImageDigestRemote(tag string) (string, error) {
 }
 
 func Push(tag string) error {
+	logging.Infof("push image %s", tag)
 	return sh.RunV("docker", "push", tag)
 }
 
