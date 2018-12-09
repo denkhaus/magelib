@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/denkhaus/magelib/common"
 	"github.com/magefile/mage/sh"
@@ -30,6 +31,17 @@ func Build(moduleDir, tag string) error {
 	})
 
 	return err
+}
+
+func ImageID(tag string) string {
+	id, err := Out(
+		"inspect",
+		"--format", "{{.Id}}",
+		tag,
+	)
+
+	common.HandleError(err)
+	return strings.Split(id, ":")[1]
 }
 
 func Push(tag string) error {
