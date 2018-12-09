@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/denkhaus/logging"
 	"github.com/denkhaus/magelib/common"
@@ -38,10 +39,16 @@ func Build(moduleDir, tag string) error {
 }
 
 func ImageDigestLocal(tag string) (string, error) {
-	return Out("inspect",
-		"--format", "{{.Id}}",
+	digest, err := Out("inspect",
+		"--format", "{{index .RepoDigests 0}}",
 		tag,
 	)
+
+	if strings.Contains(digest, "@") {
+		return strings.Split(digest, "@")[1], err
+	}
+
+	return digest, err
 }
 
 func ImageDigestRemote(tag string) (string, error) {
