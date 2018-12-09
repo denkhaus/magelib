@@ -44,6 +44,12 @@ func ImageDigestLocal(tag string) (string, error) {
 		tag,
 	)
 
+	if err != nil {
+		// image has no digest yet
+		// because digest is dependent on the registry provider, it must get pushed first.
+		return "", nil
+	}
+
 	if strings.Contains(digest, "@") {
 		return strings.Split(digest, "@")[1], err
 	}
