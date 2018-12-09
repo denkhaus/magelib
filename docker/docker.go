@@ -14,6 +14,10 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
+const (
+	DockerClientVersion = "1.39"
+)
+
 var (
 	Out            = sh.OutCmd("docker")
 	CraneDigestOut = sh.OutCmd("crane", "digest")
@@ -42,9 +46,9 @@ func Build(moduleDir, tag string) error {
 }
 
 func ImageDigestLocal(tag string) (string, error) {
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.37"))
+	cli, err := client.NewClientWithOpts(client.WithVersion(DockerClientVersion))
 	if err != nil {
-		return "", errors.Annotate(err, "NewEnvClient")
+		return "", errors.Annotate(err, "NewClientWithOpts")
 	}
 
 	images, err := cli.ImageList(context.Background(), types.ImageListOptions{})
