@@ -2,14 +2,17 @@ package docker
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/denkhaus/logging"
 	"github.com/denkhaus/magelib/common"
+	"github.com/juju/errors"
+	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
 
 var (
-	Out = sh.OutCmd("docker")
+	Out            = sh.OutCmd("docker")
+	CraneDigestOut = sh.OutCmd("craner", "digest")
 )
 
 func ContainerNameByLabel(label string) string {
@@ -33,17 +36,37 @@ func Build(moduleDir, tag string) error {
 	return err
 }
 
-func ImageID(tag string) string {
-	id, err := Out(
-		"inspect",
+func ImageDigestLocal(tag string) (string, error) {
+	return Out("inspect",
 		"--format", "{{.Id}}",
 		tag,
 	)
+}
 
-	common.HandleError(err)
-	return strings.Split(id, ":")[1]
+func ImageDigestRemote(tag string) (string, error) {
+	mg.Deps(ensureCrane)
+	return CraneDigestOut(tag)
 }
 
 func Push(tag string) error {
 	return sh.RunV("docker", "push", tag)
+}
+
+func PushOnDemand(tag string) error {
+	digestLocal, err := ImageDigestLocal(tag)
+	if err != nil {
+		return errors.Annotate(err, "ImageDigestLocal")
+	}
+
+	digestRemote, err := ImageDigestRemote(tag)
+	if err != nil {
+		return errors.Annotate(err, "ImageDigestLocal")
+	}
+
+	if digestLocal == digestRemote {
+		logging.Infof("remote image %s is in sync with local version", tag)
+		return nil
+	}
+
+	return Push(tag)
 }
