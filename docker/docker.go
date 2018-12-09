@@ -30,6 +30,7 @@ func ContainerNameByLabel(label string) string {
 
 func Build(moduleDir, tag string) error {
 	err := common.InDirectory(moduleDir, func() error {
+		logging.Infof("build image %s", tag)
 		return sh.RunV("docker", "build", "-t", tag, ".")
 	})
 
