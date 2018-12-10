@@ -10,7 +10,7 @@ import (
 func ensureCrane() error {
 	if _, err := exec.LookPath("crane"); err != nil {
 		logging.Info("install crane")
-		return common.GoGet("github.com/google/go-containerregistry/cmd/...")
+		return common.GoGet("github.com/google/go-containerregistry/cmd/crane")
 	}
 
 	return nil
