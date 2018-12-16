@@ -25,6 +25,7 @@ var (
 )
 
 func RemoveUntaggedImages() error {
+	logging.Info("remove untagged docker images")
 	p := pipe.Line(
 		pipe.Exec("docker", "images"),
 		pipe.Exec("grep", "none"),
