@@ -82,14 +82,15 @@ func ImageDigestLocal(tag string) (string, error) {
 					if strings.Contains(digest, "@") {
 						return strings.Split(digest, "@")[1], err
 					}
-
-					return "", err
 				}
+
+				// no digest localy
+				return "", nil
 			}
 		}
 	}
 
-	return "", err
+	return "", errors.Errorf("image %q not found", tag)
 }
 
 func ImageDigestRemote(tag string) (string, error) {
