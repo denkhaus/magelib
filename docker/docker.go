@@ -27,9 +27,9 @@ var (
 func RemoveUntaggedImages() error {
 	p := pipe.Line(
 		pipe.Exec("docker", "images"),
-		pipe.Exec("grep", "'none'"),
-		pipe.Exec("tr", "-s", "' '"),
-		pipe.Exec("cut", "-d", "' '", "-f", "3"),
+		pipe.Exec("grep", "none"),
+		pipe.Exec("tr", "-s", " "),
+		pipe.Exec("cut", "-d", " ", "-f", "3"),
 		pipe.Exec("xargs", "-r", "docker", "rmi", "-f"),
 	)
 
