@@ -1,21 +1,15 @@
 package docker
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
 	"github.com/denkhaus/logging"
 	"github.com/denkhaus/magelib/common"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
+	"github.com/fsouza/go-dockerclient"
 	"github.com/juju/errors"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
-)
-
-const (
-	DockerClientVersion = "1.39"
 )
 
 var (
@@ -46,14 +40,14 @@ func Build(moduleDir, tag string) error {
 }
 
 func ImageDigestLocal(tag string) (string, error) {
-	cli, err := client.NewClientWithOpts(client.WithVersion(DockerClientVersion))
+	cli, err := docker.NewClientFromEnv()
 	if err != nil {
 		return "", errors.Annotate(err, "NewClientWithOpts")
 	}
 
-	images, err := cli.ImageList(context.Background(), types.ImageListOptions{})
+	images, err := cli.ListImages(docker.ListImagesOptions{All: true})
 	if err != nil {
-		return "", errors.Annotate(err, "ImageList")
+		return "", errors.Annotate(err, "ListImages")
 	}
 
 	for _, image := range images {
