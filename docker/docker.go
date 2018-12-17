@@ -10,12 +10,31 @@ import (
 	"github.com/juju/errors"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+	pipe "gopkg.in/pipe.v2"
 )
 
 var (
 	Out            = sh.OutCmd("docker")
 	CraneDigestOut = sh.OutCmd("crane", "digest")
 )
+
+func RemoveUntaggedImages() error {
+	logging.Info("remove untagged docker images")
+	p := pipe.Line(
+		pipe.Exec("docker", "images"),
+		pipe.Exec("grep", "none"),
+		pipe.Exec("tr", "-s", " "),
+		pipe.Exec("cut", "-d", " ", "-f", "3"),
+		pipe.Exec("xargs", "-r", "docker", "rmi", "-f"),
+	)
+
+	output, err := pipe.CombinedOutput(p)
+	if len(output) > 0 {
+		logging.Info(string(output))
+	}
+
+	return err
+}
 
 func ContainerNameByLabel(label string) string {
 	label = fmt.Sprintf("'label=%s'", label)

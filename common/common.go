@@ -63,6 +63,12 @@ func InDirectory(path string, fn func() error) (err error) {
 	return fn()
 }
 
+// RunVWith is like RunV, but with env variables.
+func RunVWith(env map[string]string, cmd string, args ...string) error {
+	_, err := sh.Exec(env, os.Stdout, os.Stderr, cmd, args...)
+	return err
+}
+
 func InGoPackageDir(pkg string, fn func() error) error {
 	path := GoPackageDir(pkg)
 	return InDirectory(path, fn)

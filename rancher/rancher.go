@@ -36,7 +36,7 @@ func Compose(moduleDir, stack string) error {
 
 func ComposeWith(env map[string]string, moduleDir, stack string) error {
 	err := common.InDirectory(moduleDir, func() error {
-		return sh.RunWith(env, "rancher-compose", "-p", stack, "up", "-d", "--force-upgrade")
+		return common.RunVWith(env, "rancher-compose", "-p", stack, "up", "-d", "--force-upgrade")
 	})
 
 	return err
