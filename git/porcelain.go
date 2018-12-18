@@ -234,7 +234,7 @@ func GitStatusOutput(cwd string) (io.Reader, error) {
 
 	var stderr = new(bytes.Buffer)
 	var stdout = new(bytes.Buffer)
-	cmd := exec.Command("git", "status", "--porcelain=v2", "--branch")
+	cmd := exec.Command("git", "status", "--porcelain", "v2", "--branch")
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	cmd.Dir = cwd
