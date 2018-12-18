@@ -49,14 +49,13 @@ func (a *GitArea) hasChanged() bool {
 
 type StatusInfo struct {
 	workingDir string
+	branch     string
+	commit     string
+	remote     string
+	upstream   string
 
-	branch   string
-	commit   string
-	remote   string
-	upstream string
-	ahead    int
-	behind   int
-
+	ahead     int
+	behind    int
 	untracked int
 	unmerged  int
 
@@ -72,19 +71,22 @@ func NewStatusInfo(path string) *StatusInfo {
 	return &pi
 }
 
+//IsDirty returns true if unstaged files have changed
 func (pi *StatusInfo) IsModified() bool {
 	return pi.Unstaged.hasChanged()
 }
 
+//IsDirty returns true if staged files have changed
 func (pi *StatusInfo) IsDirty() bool {
 	return pi.Staged.hasChanged()
 }
 
+//Debug retrieves StatusInfo as string
 func (pi *StatusInfo) Debug() string {
 	return fmt.Sprintf("%#+v", pi)
 }
 
-func (pi *StatusInfo) ParseStatusOutput(r io.Reader) error {
+func (pi *StatusInfo) parseStatusOutput(r io.Reader) error {
 	var s = bufio.NewScanner(r)
 
 	for s.Scan() {
@@ -92,13 +94,13 @@ func (pi *StatusInfo) ParseStatusOutput(r io.Reader) error {
 			continue
 		}
 
-		pi.ParseLine(s.Text())
+		pi.parseLine(s.Text())
 	}
 
 	return nil
 }
 
-func (pi *StatusInfo) ParseLine(line string) error {
+func (pi *StatusInfo) parseLine(line string) error {
 	s := bufio.NewScanner(strings.NewReader(line))
 	// switch to a word based scanner
 	s.Split(bufio.ScanWords)
@@ -234,33 +236,42 @@ func GitStatusOutput(cwd string) (io.Reader, error) {
 
 	var stderr = new(bytes.Buffer)
 	var stdout = new(bytes.Buffer)
+
 	cmd := exec.Command("git", "status", "--porcelain=v2", "--branch")
+
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	cmd.Dir = cwd
 
 	if err := cmd.Run(); err != nil {
 		return nil, errors.Annotatef(err,
-			"run git status err: %s", stderr.String())
+			"git status --porcelain=v2 --branch err: %s",
+			stderr.String(),
+		)
 	}
 
 	return stdout, nil
 }
 
 func PathToGitDir(cwd string) (string, error) {
+	var stderr = new(bytes.Buffer)
 	cmd := exec.Command("git", "rev-parse", "--absolute-git-dir")
+	cmd.Stderr = stderr
 	cmd.Dir = cwd
 
 	out, err := cmd.Output()
 	if err != nil {
-		return "", errors.Annotate(err, "run git rev-parse")
+		return "", errors.Annotatef(err,
+			"git rev-parse --absolute-git-dir err: %s", stderr.String())
 	}
 
 	return strings.TrimSpace(string(out)), nil
 }
 
 func IsInsideWorkTree(cwd string) (bool, error) {
+	var stderr = new(bytes.Buffer)
 	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
+	cmd.Stderr = stderr
 	cmd.Dir = cwd
 
 	out, err := cmd.Output()
@@ -272,11 +283,15 @@ func IsInsideWorkTree(cwd string) (bool, error) {
 				}
 			}
 		}
+
 		if cmd.ProcessState.String() == notRepoStatus {
 			return false, ErrNotAGitRepo
 		}
 
-		return false, err
+		return false, errors.Annotatef(err,
+			"git rev-parse --is-inside-work-tree err: %s",
+			stderr.String(),
+		)
 	}
 
 	return strconv.ParseBool(strings.TrimSpace(string(out)))

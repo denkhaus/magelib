@@ -93,7 +93,7 @@ func GitStatus(path string) (*StatusInfo, error) {
 	}
 
 	info := NewStatusInfo(path)
-	if err := info.ParseStatusOutput(gitOut); err != nil {
+	if err := info.parseStatusOutput(gitOut); err != nil {
 		return nil, errors.Annotate(err, "ParseStatusOutput")
 	}
 
