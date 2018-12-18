@@ -1,6 +1,6 @@
 package git
 
-// from https://github.com/robertgzr/porcelain.git
+// based on https://github.com/robertgzr/porcelain.git
 
 import (
 	"bufio"
@@ -232,16 +232,19 @@ func GitStatusOutput(cwd string) (io.Reader, error) {
 		return nil, ErrNotAGitRepo
 	}
 
-	var buf = new(bytes.Buffer)
+	var stderr = new(bytes.Buffer)
+	var stdout = new(bytes.Buffer)
 	cmd := exec.Command("git", "status", "--porcelain=v2", "--branch")
-	cmd.Stdout = buf
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 	cmd.Dir = cwd
 
 	if err := cmd.Run(); err != nil {
-		return nil, errors.Annotate(err, "run git status")
+		return nil, errors.Annotatef(err,
+			"run git status err: %s", stderr.String())
 	}
 
-	return buf, nil
+	return stdout, nil
 }
 
 func PathToGitDir(cwd string) (string, error) {
