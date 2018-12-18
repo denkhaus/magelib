@@ -87,16 +87,15 @@ func (p *GitRepository) CommitAll(message string) error {
 }
 
 func GitStatus(path string) (*StatusInfo, error) {
-	gitOut, err := GetGitOutput(path)
+	gitOut, err := GitStatusOutput(path)
 	if err != nil {
-		return nil, errors.Annotate(err, "GetGitOutput")
+		return nil, errors.Annotate(err, "GitStatusOutput")
 	}
 
-	porcInfo := NewStatusInfo(path)
-	if err := porcInfo.ParseStatusInfo(gitOut); err != nil {
-		return nil, errors.Annotate(err, "ParseStatusInfo")
+	info := NewStatusInfo(path)
+	if err := info.ParseStatusOutput(gitOut); err != nil {
+		return nil, errors.Annotate(err, "ParseStatusOutput")
 	}
 
-	return porcInfo, nil
-
+	return info, nil
 }

@@ -72,11 +72,11 @@ func NewStatusInfo(path string) *StatusInfo {
 	return &pi
 }
 
-func (pi *StatusInfo) hasModified() bool {
+func (pi *StatusInfo) IsModified() bool {
 	return pi.Unstaged.hasChanged()
 }
 
-func (pi *StatusInfo) isDirty() bool {
+func (pi *StatusInfo) IsDirty() bool {
 	return pi.Staged.hasChanged()
 }
 
@@ -84,7 +84,7 @@ func (pi *StatusInfo) Debug() string {
 	return fmt.Sprintf("%#+v", pi)
 }
 
-func (pi *StatusInfo) ParseStatusInfo(r io.Reader) error {
+func (pi *StatusInfo) ParseStatusOutput(r io.Reader) error {
 	var s = bufio.NewScanner(r)
 
 	for s.Scan() {
@@ -222,7 +222,7 @@ func (pi *StatusInfo) parseRenamedFile(s *bufio.Scanner) error {
 	return pi.parseTrackedFile(s)
 }
 
-func GetGitOutput(cwd string) (io.Reader, error) {
+func GitStatusOutput(cwd string) (io.Reader, error) {
 	if ok, err := IsInsideWorkTree(cwd); err != nil {
 		if err == ErrNotAGitRepo {
 			return nil, ErrNotAGitRepo
