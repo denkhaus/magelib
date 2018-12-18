@@ -2,13 +2,14 @@ package git
 
 import (
 	"bytes"
-	"time"
 	"path/filepath"
-	"gopkg.in/src-d/go-git.v4"
-	"github.com/juju/errors"
+	"time"
+
 	"github.com/denkhaus/logging"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"github.com/denkhaus/magelib/common"
+	"github.com/juju/errors"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
 type GitRepository struct {
@@ -20,11 +21,11 @@ var Name = "Repo Maintainer"
 var Email = "unknown@github"
 
 func NewGitRepository(repoPath, repoURL string) *GitRepository {
-	path, err:=  filepath.Abs(repoPath)
+	path, err := filepath.Abs(repoPath)
 	common.HandleError(err)
 
 	rep := GitRepository{
-		path:path,     
+		path:    path,
 		repoURL: repoURL,
 	}
 
@@ -41,30 +42,30 @@ func (p *GitRepository) Clone() (string, error) {
 	return string(output.Bytes()), err
 }
 
-func (p *GitRepository) CommitAll(message string) error{
+func (p *GitRepository) CommitAll(message string) error {
 	r, err := git.PlainOpen(p.path)
-	if err != nil{
+	if err != nil {
 		return errors.Annotate(err, "PlainOpen")
 	}
-	
+
 	w, err := r.Worktree()
-	if err != nil{
+	if err != nil {
 		return errors.Annotate(err, "Worktree")
 	}
-	
+
 	status, err := w.Status()
-	if err != nil{
+	if err != nil {
 		return errors.Annotate(err, "Status")
 	}
 
 	logging.Info(status)
 
-	if 	err := w.AddGlob("./**/*"); err != nil{
+	if err := w.AddGlob("./**/*"); err != nil {
 		return errors.Annotate(err, "AddGlob")
 	}
 
 	commit, err := w.Commit(message, &git.CommitOptions{
-		All:true,
+		All: true,
 		Author: &object.Signature{
 			Name:  Name,
 			Email: Email,
@@ -72,15 +73,30 @@ func (p *GitRepository) CommitAll(message string) error{
 		},
 	})
 
-	if err != nil{
+	if err != nil {
 		return errors.Annotate(err, "Commit")
 	}
 
-	obj, err := r.CommitObject(commit)	
-	if err != nil{
+	obj, err := r.CommitObject(commit)
+	if err != nil {
 		return errors.Annotate(err, "CommitObject")
 	}
 
 	logging.Info(obj)
 	return nil
+}
+
+func GitStatus(path string) (*StatusInfo, error) {
+	gitOut, err := GetGitOutput(path)
+	if err != nil {
+		return nil, errors.Annotate(err, "GetGitOutput")
+	}
+
+	porcInfo := NewStatusInfo(path)
+	if err := porcInfo.ParseStatusInfo(gitOut); err != nil {
+		return nil, errors.Annotate(err, "ParseStatusInfo")
+	}
+
+	return porcInfo, nil
+
 }
