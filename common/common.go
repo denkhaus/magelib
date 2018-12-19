@@ -41,6 +41,7 @@ func HandleError(err error) {
 }
 
 func InDirectory(path string, fn func() error) (err error) {
+	path = os.ExpandEnv(path)
 	if !filepath.IsAbs(path) {
 		path, err = filepath.Abs(path)
 		if err != nil {
@@ -70,7 +71,7 @@ func RunVWith(env map[string]string, cmd string, args ...string) error {
 }
 
 func InGoPackageDir(pkg string, fn func() error) error {
-	path := GoPackageDir(pkg)
+	path := GoPackageDir(os.ExpandEnv(pkg))
 	return InDirectory(path, fn)
 }
 
