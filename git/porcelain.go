@@ -81,6 +81,11 @@ func (pi *StatusInfo) IsDirty() bool {
 	return pi.Staged.hasChanged()
 }
 
+//IsSynced returns true if repo is in sync with remote
+func (pi *StatusInfo) IsSynced() bool {
+	return pi.ahead == 0 && pi.behind == 0
+}
+
 //Debug retrieves StatusInfo as string
 func (pi *StatusInfo) Debug() string {
 	return fmt.Sprintf("%#+v", pi)
