@@ -58,6 +58,15 @@ func Build(moduleDir, tag string) error {
 	return err
 }
 
+func BuildWithFile(moduleDir, dockerfilePath, tag string) error {
+	err := common.InDirectory(moduleDir, func() error {
+		logging.Infof("build image %s", tag)
+		return sh.RunV("docker", "build", "-t", tag, "-f", dockerfilePath, ".")
+	})
+
+	return err
+}
+
 func ImageDigestLocal(tag string) (string, error) {
 	cli, err := docker.NewClientFromEnv()
 	if err != nil {
