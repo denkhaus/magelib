@@ -14,11 +14,13 @@ import (
 type OutCmdFunc func(args ...string) (string, error)
 
 var (
-	MkTempDir = sh.OutCmd("mktemp", "-d")
-	GoInstall = sh.RunCmd("go", "install")
-	GoUpdate  = sh.RunCmd("go", "get", "-u")
-	GoGet     = sh.RunCmd("go", "get")
-	GoEnvOut  = sh.OutCmd("go", "env")
+	MkTempDir      = sh.OutCmd("mktemp", "-d")
+	GoInstall      = sh.RunCmd("go", "install")
+	GoUpdate       = sh.RunCmd("go", "get", "-u")
+	GoModuleVendor = sh.RunCmd("go", "mod", "vendor")
+	GoModuleTidy   = sh.RunCmd("go", "mod", "tidy")
+	GoGet          = sh.RunCmd("go", "get")
+	GoEnvOut       = sh.OutCmd("go", "env")
 )
 
 func PipeOutCmd(fn OutCmdFunc, args ...string) pipe.Pipe {
