@@ -21,6 +21,7 @@ var (
 	GoModuleTidy   = sh.RunCmd("go", "mod", "tidy")
 	GoGet          = sh.RunCmd("go", "get")
 	GoEnvOut       = sh.OutCmd("go", "env")
+	GoModOut       = sh.RunCmd("go", "mod")
 )
 
 func PipeOutCmd(fn OutCmdFunc, args ...string) pipe.Pipe {
