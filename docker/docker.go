@@ -49,6 +49,12 @@ func ContainerNameByLabel(label string) string {
 	return name
 }
 
+func BuildFunc(moduleDir, tag string) func() error {
+	return func() error {
+		return Build(moduleDir, tag)
+	}
+}
+
 func Build(moduleDir, tag string) error {
 	err := common.InDirectory(moduleDir, func() error {
 		logging.Infof("build image %s", tag)
@@ -56,6 +62,12 @@ func Build(moduleDir, tag string) error {
 	})
 
 	return err
+}
+
+func BuildWithFileFunc(moduleDir, dockerfilePath, tag string) func() error {
+	return func() error {
+		return BuildWithFile(moduleDir, dockerfilePath, tag)
+	}
 }
 
 func BuildWithFile(moduleDir, dockerfilePath, tag string) error {
