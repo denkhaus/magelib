@@ -26,7 +26,7 @@ func ContainerNameByLabel(host, label string) string {
 	return name
 }
 
-func Compose(moduleDir, stack string) error {
+func RancherCompose(moduleDir, stack string) error {
 	err := common.InDirectory(moduleDir, func() error {
 		return sh.RunV("rancher-compose", "-p", stack, "up", "-d", "--force-upgrade")
 	})
@@ -34,9 +34,25 @@ func Compose(moduleDir, stack string) error {
 	return err
 }
 
-func ComposeWith(env map[string]string, moduleDir, stack string) error {
+func RancherComposeWith(env map[string]string, moduleDir, stack string) error {
 	err := common.InDirectory(moduleDir, func() error {
 		return common.RunVWith(env, "rancher-compose", "-p", stack, "up", "-d", "--force-upgrade")
+	})
+
+	return err
+}
+
+func Rancher(moduleDir, stack string) error {
+	err := common.InDirectory(moduleDir, func() error {
+		return sh.RunV("rancher", "-s", stack, "up", "-d", "--force-upgrade")
+	})
+
+	return err
+}
+
+func RancherWith(env map[string]string, moduleDir, stack string) error {
+	err := common.InDirectory(moduleDir, func() error {
+		return common.RunVWith(env, "rancher", "-s", stack, "up", "-d", "--force-upgrade")
 	})
 
 	return err
