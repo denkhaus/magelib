@@ -1,7 +1,7 @@
 package git
 
 import (
-	"bytes"
+	"io"
 	"path/filepath"
 	"time"
 
@@ -32,14 +32,17 @@ func NewGitRepository(repoPath, repoURL string) *GitRepository {
 	return &rep
 }
 
-func (p *GitRepository) Clone() (string, error) {
-	output := bytes.NewBuffer(nil)
+func (p *GitRepository) Clone(w io.Writer) error {
 	_, err := git.PlainClone(p.path, false, &git.CloneOptions{
 		URL:      p.repoURL,
-		Progress: output,
+		Progress: w,
 	})
 
-	return string(output.Bytes()), err
+	if err != nil {
+		return errors.Annotate(err, "PlainClone")
+	}
+
+	return nil
 }
 
 func (p *GitRepository) CommitAll(message string) error {
