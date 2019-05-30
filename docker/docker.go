@@ -59,7 +59,7 @@ func Build(moduleDir, tag string) error {
 	err := common.InDirectory(moduleDir, func() error {
 		logging.Infof("build image %s", tag)
 		output, err := Out("build", "-t", tag, ".")
-		fmt.Printf(output)
+		fmt.Println(output)
 
 		if !strings.Contains(output, tag) {
 			return errors.New("docker build doesn't finish correctly")
