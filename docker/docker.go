@@ -6,7 +6,7 @@ import (
 
 	"github.com/denkhaus/logging"
 	"github.com/denkhaus/magelib/common"
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/juju/errors"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
@@ -58,7 +58,14 @@ func BuildFunc(moduleDir, tag string) func() error {
 func Build(moduleDir, tag string) error {
 	err := common.InDirectory(moduleDir, func() error {
 		logging.Infof("build image %s", tag)
-		return sh.RunV("docker", "build", "-t", tag, ".")
+		output, err := Out("build", "-t", tag, ".")
+		fmt.Printf(output)
+
+		if !strings.Contains(output, tag) {
+			return errors.New("docker build doesn't finish correctly")
+		}
+
+		return err
 	})
 
 	return err
