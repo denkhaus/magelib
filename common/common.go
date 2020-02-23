@@ -79,6 +79,12 @@ func InGoPackageDir(pkg string, fn func() error) error {
 	return InDirectory(path, fn)
 }
 
+func EnsureBranchInGoPackageFunc(pkg string, branchName string) func() error {
+	return func() error {
+		return EnsureBranchInGoPackage(pkg, branchName)
+	}
+}
+
 func EnsureBranchInGoPackage(pkg string, branchName string) error {
 	return InGoPackageDir(pkg, func() error {
 		return GitCheckout(branchName)
