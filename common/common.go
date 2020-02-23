@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/denkhaus/logging"
 	"github.com/juju/errors"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
@@ -58,6 +59,7 @@ func InDirectory(path string, fn func() error) (err error) {
 		return errors.Annotate(err, "Getwd")
 	}
 
+	logging.Infof("enter dir %s", path)
 	if err := os.Chdir(path); err != nil {
 		return errors.Annotate(err, "Chdir")
 	}
@@ -87,6 +89,7 @@ func EnsureBranchInGoPackageFunc(pkg string, branchName string) func() error {
 
 func EnsureBranchInGoPackage(pkg string, branchName string) error {
 	return InGoPackageDir(pkg, func() error {
+		logging.Infof("checkout %q in go pkg %s", branchName, pkg)
 		return GitCheckout(branchName)
 	})
 }
