@@ -14,6 +14,7 @@ import (
 type OutCmdFunc func(args ...string) (string, error)
 
 var (
+	GitCheckout    = sh.RunCmd("git", "checkout", "-b")
 	MkTempDir      = sh.OutCmd("mktemp", "-d")
 	GoInstall      = sh.RunCmd("go", "install")
 	GoUpdate       = sh.RunCmd("go", "get", "-u")
@@ -76,6 +77,12 @@ func RunVWith(env map[string]string, cmd string, args ...string) error {
 func InGoPackageDir(pkg string, fn func() error) error {
 	path := GoPackageDir(os.ExpandEnv(pkg))
 	return InDirectory(path, fn)
+}
+
+func EnsureBranchInGoPackage(pkg string, branchName string) error {
+	return InGoPackageDir(pkg, func() error {
+		return GitCheckout(branchName)
+	})
 }
 
 func GoPackageDir(pkg string) string {
