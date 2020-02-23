@@ -59,7 +59,6 @@ func InDirectory(path string, fn func() error) (err error) {
 		return errors.Annotate(err, "Getwd")
 	}
 
-	logging.Infof("enter dir %s", path)
 	if err := os.Chdir(path); err != nil {
 		return errors.Annotate(err, "Chdir")
 	}
