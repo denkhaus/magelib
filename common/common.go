@@ -14,7 +14,7 @@ import (
 type OutCmdFunc func(args ...string) (string, error)
 
 var (
-	GitCheckout    = sh.RunCmd("git", "checkout", "-b")
+	GitCheckout    = sh.RunCmd("git", "checkout")
 	MkTempDir      = sh.OutCmd("mktemp", "-d")
 	GoInstall      = sh.RunCmd("go", "install")
 	GoUpdate       = sh.RunCmd("go", "get", "-u")
