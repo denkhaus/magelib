@@ -88,7 +88,7 @@ func EnsureBranchInRepositoryFunc(path string, branchName string) func() error {
 
 func EnsureBranchInRepository(path string, branchName string) error {
 	return InDirectory(path, func() error {
-		logging.Infof("checkout %q in path %s", branchName, path)
+		logging.Infof("checkout %q in repository path %s", branchName, path)
 		return GitCheckout(branchName)
 	})
 }
