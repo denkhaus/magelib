@@ -80,6 +80,19 @@ func InGoPackageDir(pkg string, fn func() error) error {
 	return InDirectory(path, fn)
 }
 
+func EnsureBranchInRepositoryFunc(path string, branchName string) func() error {
+	return func() error {
+		return EnsureBranchInRepository(path, branchName)
+	}
+}
+
+func EnsureBranchInRepository(path string, branchName string) error {
+	return InDirectory(path, func() error {
+		logging.Infof("checkout %q in path %s", branchName, path)
+		return GitCheckout(branchName)
+	})
+}
+
 func EnsureBranchInGoPackageFunc(pkg string, branchName string) func() error {
 	return func() error {
 		return EnsureBranchInGoPackage(pkg, branchName)
