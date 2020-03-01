@@ -229,6 +229,21 @@ func (pi *StatusInfo) parseRenamedFile(s *bufio.Scanner) error {
 	return pi.parseTrackedFile(s)
 }
 
+func GitBranch(cwd string) (string, error) {
+	var stderr = new(bytes.Buffer)
+	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	cmd.Stderr = stderr
+	cmd.Dir = cwd
+
+	out, err := cmd.Output()
+	if err != nil {
+		return "", errors.Annotatef(err,
+			"git rev-parse --abbrev-ref HEAD err: [%s]", stderr.String())
+	}
+
+	return strings.TrimSpace(string(out)), nil
+}
+
 func GitStatusOutput(cwd string) (io.Reader, error) {
 	if ok, err := IsInsideWorkTree(cwd); err != nil {
 		if err == ErrNotAGitRepo {
@@ -250,7 +265,7 @@ func GitStatusOutput(cwd string) (io.Reader, error) {
 
 	if err := cmd.Run(); err != nil {
 		return nil, errors.Annotatef(err,
-			"git status --porcelain=v2 --branch err: %s",
+			"git status --porcelain=v2 --branch err: [%s]",
 			stderr.String(),
 		)
 	}
@@ -267,7 +282,7 @@ func PathToGitDir(cwd string) (string, error) {
 	out, err := cmd.Output()
 	if err != nil {
 		return "", errors.Annotatef(err,
-			"git rev-parse --absolute-git-dir err: %s", stderr.String())
+			"git rev-parse --absolute-git-dir err: [%s]", stderr.String())
 	}
 
 	return strings.TrimSpace(string(out)), nil
@@ -294,7 +309,7 @@ func IsInsideWorkTree(cwd string) (bool, error) {
 		}
 
 		return false, errors.Annotatef(err,
-			"git rev-parse --is-inside-work-tree err: %s",
+			"git rev-parse --is-inside-work-tree err: [%s]",
 			stderr.String(),
 		)
 	}
