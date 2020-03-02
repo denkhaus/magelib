@@ -2,20 +2,17 @@ package common
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-
-	"github.com/denkhaus/logging"
 	"github.com/juju/errors"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	pipe "gopkg.in/pipe.v2"
+	"os"
+	"path/filepath"
 )
 
 type OutCmdFunc func(args ...string) (string, error)
 
 var (
-	GitCheckout    = sh.RunCmd("git", "checkout")
 	MkTempDir      = sh.OutCmd("mktemp", "-d")
 	GoInstall      = sh.RunCmd("go", "install")
 	GoUpdate       = sh.RunCmd("go", "get", "-u")
@@ -78,42 +75,6 @@ func RunVWith(env map[string]string, cmd string, args ...string) error {
 func InGoPackageDir(pkg string, fn func() error) error {
 	path := GoPackageDir(os.ExpandEnv(pkg))
 	return InDirectory(path, fn)
-}
-
-func EnsureBranchInRepositoryFunc(path string, branchName string) func() error {
-	return func() error {
-		return EnsureBranchInRepository(path, branchName)
-	}
-}
-
-func EnsureBranchInRepository(path string, branchName string) error {
-	return InDirectory(path, func() error {
-		branch, err := git.GitBranch(path)
-		if err != nil {
-			return errors.Annotate(err, "GitBranch")
-		}
-
-		if branch != branchName {
-			logging.Infof("checkout [%s] in repository [%s]", branchName, path)
-			return GitCheckout(branchName)
-		}
-
-		logging.Infof("branch [%s] is checked out in repository [%s]", branchName, path)
-		return nil
-	})
-}
-
-func EnsureBranchInGoPackageFunc(pkg string, branchName string) func() error {
-	return func() error {
-		return EnsureBranchInGoPackage(pkg, branchName)
-	}
-}
-
-func EnsureBranchInGoPackage(pkg string, branchName string) error {
-	return InGoPackageDir(pkg, func() error {
-		logging.Infof("checkout %q in go pkg %s", branchName, pkg)
-		return GitCheckout(branchName)
-	})
 }
 
 func GoPackageDir(pkg string) string {

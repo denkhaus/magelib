@@ -229,21 +229,6 @@ func (pi *StatusInfo) parseRenamedFile(s *bufio.Scanner) error {
 	return pi.parseTrackedFile(s)
 }
 
-func GitBranch(cwd string) (string, error) {
-	var stderr = new(bytes.Buffer)
-	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	cmd.Stderr = stderr
-	cmd.Dir = cwd
-
-	out, err := cmd.Output()
-	if err != nil {
-		return "", errors.Annotatef(err,
-			"git rev-parse --abbrev-ref HEAD err: [%s]", stderr.String())
-	}
-
-	return strings.TrimSpace(string(out)), nil
-}
-
 func GitStatusOutput(cwd string) (io.Reader, error) {
 	if ok, err := IsInsideWorkTree(cwd); err != nil {
 		if err == ErrNotAGitRepo {
