@@ -1,11 +1,6 @@
 package git
 
 import (
-	"bytes"
-	"os"
-	"os/exec"
-	"strings"
-
 	"github.com/denkhaus/logging"
 	"github.com/denkhaus/magelib/common"
 	"github.com/juju/errors"
@@ -14,22 +9,8 @@ import (
 
 var (
 	GitCheckout = sh.RunCmd("git", "checkout")
+	GitBranch   = sh.OutCmd("git", "rev-parse", "--abbrev-ref", "HEAD")
 )
-
-func GitBranch(cwd string) (string, error) {
-	var stderr = new(bytes.Buffer)
-	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	cmd.Stderr = stderr
-	cmd.Dir = cwd
-
-	out, err := cmd.Output()
-	if err != nil {
-		return "", errors.Annotatef(err,
-			"git rev-parse --abbrev-ref HEAD err: [%s]", stderr.String())
-	}
-
-	return strings.TrimSpace(string(out)), nil
-}
 
 func EnsureBranchInRepositoryCmd(path string, branchName string) func() error {
 	return func() error {
@@ -39,7 +20,7 @@ func EnsureBranchInRepositoryCmd(path string, branchName string) func() error {
 
 func EnsureBranchInRepository(path string, branchName string) error {
 	return common.InDirectory(path, func() error {
-		branch, err := GitBranch(path)
+		branch, err := GitBranch()
 		if err != nil {
 			return errors.Annotate(err, "GitBranch")
 		}
@@ -62,8 +43,7 @@ func EnsureBranchInGoPackageCmd(pkg string, branchName string) func() error {
 
 func EnsureBranchInGoPackage(pkg string, branchName string) error {
 	return common.InGoPackageDir(pkg, func() error {
-		path := common.GoPackageDir(os.ExpandEnv(pkg))
-		branch, err := GitBranch(path)
+		branch, err := GitBranch()
 		if err != nil {
 			return errors.Annotate(err, "GitBranch")
 		}
