@@ -109,7 +109,7 @@ func RancherCompose(moduleDir, stack string) error {
 func RancherComposeWith(env map[string]string, moduleDir, stack string) error {
 	mg.Deps(EnsureRancherCompose)
 	err := common.InDirectory(moduleDir, func() error {
-		return common.RunVWith(env, "rancher-compose", "-p", stack, "up", "-d", "--force-upgrade")
+		return sh.RunWithV(env, "rancher-compose", "-p", stack, "up", "-d", "--force-upgrade")
 	})
 
 	return err
@@ -127,7 +127,7 @@ func Rancher(moduleDir, stack string) error {
 func RancherWith(env map[string]string, moduleDir, stack string) error {
 	mg.Deps(EnsureRancher)
 	err := common.InDirectory(moduleDir, func() error {
-		return common.RunVWith(env, "rancher", "up", "-s", stack, "-d", "--force-upgrade")
+		return sh.RunWithV(env, "rancher", "up", "-s", stack, "-d", "--force-upgrade")
 	})
 
 	return err

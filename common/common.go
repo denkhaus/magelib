@@ -2,12 +2,13 @@ package common
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/juju/errors"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	pipe "gopkg.in/pipe.v2"
-	"os"
-	"path/filepath"
 )
 
 type OutCmdFunc func(args ...string) (string, error)
@@ -64,12 +65,6 @@ func InDirectory(path string, fn func() error) (err error) {
 	}(oldPath)
 
 	return fn()
-}
-
-// RunVWith is like RunV, but with env variables.
-func RunVWith(env map[string]string, cmd string, args ...string) error {
-	_, err := sh.Exec(env, os.Stdout, os.Stderr, cmd, args...)
-	return err
 }
 
 func InGoPackageDir(pkg string, fn func() error) error {
