@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/denkhaus/logging v0.0.0-20180714213349-14bfb935047c
 	github.com/fsouza/go-dockerclient v1.4.0
-	github.com/juju/errors v0.0.0-20190207033735-e65537c515d7
+	github.com/juju/errors v0.0.0-20200330140219-3fe23663418f
 	github.com/juju/loggo v0.0.0-20190526231331-6e530bcce5d8 // indirect
 	github.com/juju/testing v0.0.0-20190429233213-dfc56b8c09fc // indirect
 	github.com/magefile/mage v1.11.0

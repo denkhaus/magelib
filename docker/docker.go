@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/denkhaus/logging"
-	"github.com/denkhaus/magelib/common"
+	"github.com/denkhaus/magelib"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/juju/errors"
 	"github.com/magefile/mage/mg"
@@ -17,6 +17,13 @@ var (
 	Out            = sh.OutCmd("docker")
 	CraneDigestOut = sh.OutCmd("crane", "digest")
 )
+
+// RemoveUntaggedImages as magelib.Cmd
+func RemoveUntaggedImagesCmd() magelib.Cmd {
+	return func() error {
+		return RemoveUntaggedImages()
+	}
+}
 
 func RemoveUntaggedImages() error {
 	logging.Info("remove untagged docker images")
@@ -45,18 +52,19 @@ func ContainerNameByLabel(label string) string {
 		"--format", "'{{.Names}}'",
 	)
 
-	common.HandleError(err)
+	magelib.HandleError(err)
 	return name
 }
 
-func BuildCmd(moduleDir, tag string) func() error {
+// Build as magelib.Cmd
+func BuildCmd(moduleDir, tag string) magelib.Cmd {
 	return func() error {
 		return Build(moduleDir, tag)
 	}
 }
 
 func Build(moduleDir, tag string) error {
-	err := common.InDirectory(moduleDir, func() error {
+	err := magelib.InDirectory(moduleDir, func() error {
 		logging.Infof("build image %s", tag)
 		output, err := Out("build", "-t", tag, ".")
 		fmt.Println(output)
@@ -71,16 +79,47 @@ func Build(moduleDir, tag string) error {
 	return err
 }
 
-func BuildWithFileCmd(moduleDir, dockerfilePath, tag string) func() error {
+// BuildWithFile as magelib.Cmd
+func BuildWithFileCmd(moduleDir, dockerfilePath, tag string) magelib.Cmd {
 	return func() error {
 		return BuildWithFile(moduleDir, dockerfilePath, tag)
 	}
 }
 
 func BuildWithFile(moduleDir, dockerfilePath, tag string) error {
-	err := common.InDirectory(moduleDir, func() error {
+	err := magelib.InDirectory(moduleDir, func() error {
 		logging.Infof("build image %s", tag)
 		return sh.RunV("docker", "build", "-t", tag, "-f", dockerfilePath, ".")
+	})
+
+	return err
+}
+
+// BuildWithArgs as magelib.Cmd
+func BuildWithArgsCmd(moduleDir, tag string, args magelib.ArgsMap) magelib.Cmd {
+	return func() error {
+		return BuildWithArgs(moduleDir, tag, args)
+	}
+}
+
+func BuildWithArgs(moduleDir, tag string, args magelib.ArgsMap) error {
+	err := magelib.InDirectory(moduleDir, func() error {
+		logging.Infof("docker: build image %s with build args", tag)
+
+		buildArgs := createBuildArgs(args)
+		params := []string{"build", "--tag", tag}
+		params = append(params, buildArgs...)
+		params = append(params, ".")
+
+		logging.Infof("params", params)
+		output, err := Out(params...)
+		logging.Println(output)
+
+		if !strings.Contains(output, tag) {
+			return errors.New("docker build doesn't finish correctly")
+		}
+
+		return err
 	})
 
 	return err
@@ -139,4 +178,45 @@ func PushOnDemand(tag string) error {
 	}
 
 	return Push(tag)
+}
+
+func IsImageAvailable(imageName string) bool {
+	if err := sh.Run("docker", "inspect", "--type", "image", imageName); err == nil {
+		return true
+	}
+
+	return false
+}
+
+//RemoveLocalImage as magelib.Cmd
+func RemoveLocalImageCmd(imageName string) magelib.Cmd {
+	return func() error {
+		return RemoveLocalImage(imageName)
+	}
+}
+
+func RemoveLocalImage(imageName string) error {
+	if IsImageAvailable(imageName) {
+		logging.Infof("docker: remove local image %s", imageName)
+		if err := sh.RunV("docker", "rmi", imageName); err != nil {
+			return errors.Annotate(err, "DockerOut")
+		}
+	}
+
+	return nil
+}
+
+func createBuildArgs(args magelib.ArgsMap) []string {
+	out := []string{}
+
+	if args == nil {
+		return out
+	}
+
+	for key, value := range args {
+		out = append(out, "--build-arg")
+		out = append(out, fmt.Sprintf("%s=%s", key, value))
+	}
+
+	return out
 }

@@ -10,19 +10,19 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type commonTest struct {
+type magelibTest struct {
 	suite.Suite
 }
 
-func (suite *commonTest) SetupTest() {
+func (suite *magelibTest) SetupTest() {
 
 }
 
-func (suite *commonTest) TearDownTest() {
+func (suite *magelibTest) TearDownTest() {
 
 }
 
-func (suite *commonTest) TestStructAccessor() {
+func (suite *magelibTest) TestGitCommit() {
 	dir, err := os.Getwd()
 	if err != nil {
 		suite.FailNow("PlainOpen")
@@ -51,6 +51,6 @@ func (suite *commonTest) TestStructAccessor() {
 }
 
 func TestCommon(t *testing.T) {
-	testSuite := new(commonTest)
+	testSuite := new(magelibTest)
 	suite.Run(t, testSuite)
 }

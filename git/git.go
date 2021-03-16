@@ -1,93 +1,20 @@
 package git
 
 import (
-	"io"
+	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/denkhaus/logging"
-	"github.com/denkhaus/magelib/common"
+	"github.com/denkhaus/magelib"
+
 	"github.com/juju/errors"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"github.com/magefile/mage/sh"
 )
 
-type GitRepository struct {
-	path    string
-	repoURL string
-}
-
-var Name = "Repo Maintainer"
-var Email = "unknown@github"
-
-func NewGitRepository(repoPath, repoURL string) *GitRepository {
-	path, err := filepath.Abs(repoPath)
-	common.HandleError(err)
-
-	rep := GitRepository{
-		path:    path,
-		repoURL: repoURL,
-	}
-
-	return &rep
-}
-
-func (p *GitRepository) Clone(w io.Writer) error {
-	_, err := git.PlainClone(p.path, false, &git.CloneOptions{
-		URL:      p.repoURL,
-		Progress: w,
-	})
-
-	if err != nil {
-		return errors.Annotate(err, "PlainClone")
-	}
-
-	return nil
-}
-
-func (p *GitRepository) CommitAll(message string) error {
-	r, err := git.PlainOpen(p.path)
-	if err != nil {
-		return errors.Annotate(err, "PlainOpen")
-	}
-
-	w, err := r.Worktree()
-	if err != nil {
-		return errors.Annotate(err, "Worktree")
-	}
-
-	status, err := w.Status()
-	if err != nil {
-		return errors.Annotate(err, "Status")
-	}
-
-	logging.Info(status)
-
-	if err := w.AddGlob("./**/*"); err != nil {
-		return errors.Annotate(err, "AddGlob")
-	}
-
-	commit, err := w.Commit(message, &git.CommitOptions{
-		All: true,
-		Author: &object.Signature{
-			Name:  Name,
-			Email: Email,
-			When:  time.Now(),
-		},
-	})
-
-	if err != nil {
-		return errors.Annotate(err, "Commit")
-	}
-
-	obj, err := r.CommitObject(commit)
-	if err != nil {
-		return errors.Annotate(err, "CommitObject")
-	}
-
-	logging.Info(obj)
-	return nil
-}
+var (
+	Checkout = sh.RunCmd("git", "checkout")
+	Branch   = sh.OutCmd("git", "rev-parse", "--abbrev-ref", "HEAD")
+)
 
 func GitStatus(path string) (*StatusInfo, error) {
 	gitOut, err := GitStatusOutput(path)
@@ -101,4 +28,63 @@ func GitStatus(path string) (*StatusInfo, error) {
 	}
 
 	return info, nil
+}
+
+func FormatStatusError(path string, status *StatusInfo) error {
+	if status.IsDirty() {
+		return errors.Errorf("unstaged files have been changed in repo %q", path)
+	}
+
+	if status.IsModified() {
+		return errors.Errorf("staged files have been modified in repo %q", path)
+	}
+
+	if !status.IsSynced() {
+		return errors.Errorf("repo %q is not in sync with remote repo", path)
+	}
+
+	return nil
+}
+
+func EnsureBranchInRepositoryCmd(path string, branchName string) func() error {
+	return func() error {
+		return EnsureBranchInRepository(path, branchName)
+	}
+}
+
+func EnsureBranchInRepository(path string, branchName string) error {
+	return magelib.InDirectory(path, func() error {
+		branch, err := Branch()
+		if err != nil {
+			return errors.Annotate(err, "GitBranch")
+		}
+
+		if branch != branchName {
+			logging.Infof("checkout [%s] in repository [%s]", branchName, path)
+			return Checkout(branchName)
+		}
+
+		logging.Infof("branch [%s] is checked out in repository [%s]", branchName, path)
+		return nil
+	})
+}
+
+func IsRepoCleanCmd(path string) func() magelib.Cmd {
+	return func() error {
+		return IsRepoClean(path)
+	}
+}
+
+func IsRepoClean(path string) error {
+	path, err := filepath.Abs(os.ExpandEnv(path))
+	if err != nil {
+		return errors.Annotate(err, "Abs")
+	}
+
+	status, err := GitStatus(path)
+	if err != nil {
+		return errors.Annotate(err, "GitStatus")
+	}
+
+	return FormatStatusError(path, status)
 }

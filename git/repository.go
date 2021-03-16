@@ -1,59 +1,90 @@
 package git
 
 import (
+	"io"
+	"path/filepath"
+	"time"
+
 	"github.com/denkhaus/logging"
-	"github.com/denkhaus/magelib/common"
+	"github.com/denkhaus/magelib"
 	"github.com/juju/errors"
-	"github.com/magefile/mage/sh"
+	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
-var (
-	GitCheckout = sh.RunCmd("git", "checkout")
-	GitBranch   = sh.OutCmd("git", "rev-parse", "--abbrev-ref", "HEAD")
-)
+type GitRepository struct {
+	path    string
+	repoURL string
+}
 
-func EnsureBranchInRepositoryCmd(path string, branchName string) func() error {
-	return func() error {
-		return EnsureBranchInRepository(path, branchName)
+var Name = "Repo Maintainer"
+var Email = "unknown@github"
+
+func NewGitRepository(repoPath, repoURL string) *GitRepository {
+	path, err := filepath.Abs(repoPath)
+	magelib.HandleError(err)
+
+	rep := GitRepository{
+		path:    path,
+		repoURL: repoURL,
 	}
+
+	return &rep
 }
 
-func EnsureBranchInRepository(path string, branchName string) error {
-	return common.InDirectory(path, func() error {
-		branch, err := GitBranch()
-		if err != nil {
-			return errors.Annotate(err, "GitBranch")
-		}
-
-		if branch != branchName {
-			logging.Infof("checkout [%s] in repository [%s]", branchName, path)
-			return GitCheckout(branchName)
-		}
-
-		logging.Infof("branch [%s] is checked out in repository [%s]", branchName, path)
-		return nil
+func (p *GitRepository) Clone(w io.Writer) error {
+	_, err := git.PlainClone(p.path, false, &git.CloneOptions{
+		URL:      p.repoURL,
+		Progress: w,
 	})
-}
 
-func EnsureBranchInGoPackageCmd(pkg string, branchName string) func() error {
-	return func() error {
-		return EnsureBranchInGoPackage(pkg, branchName)
+	if err != nil {
+		return errors.Annotate(err, "PlainClone")
 	}
+
+	return nil
 }
 
-func EnsureBranchInGoPackage(pkg string, branchName string) error {
-	return common.InGoPackageDir(pkg, func() error {
-		branch, err := GitBranch()
-		if err != nil {
-			return errors.Annotate(err, "GitBranch")
-		}
+func (p *GitRepository) CommitAll(message string) error {
+	r, err := git.PlainOpen(p.path)
+	if err != nil {
+		return errors.Annotate(err, "PlainOpen")
+	}
 
-		if branch != branchName {
-			logging.Infof("checkout [%s] in go pkg [%s]", branchName, pkg)
-			return GitCheckout(branchName)
-		}
+	w, err := r.Worktree()
+	if err != nil {
+		return errors.Annotate(err, "Worktree")
+	}
 
-		logging.Infof("branch [%s] is checked out in go pkg [%s]", branchName, pkg)
-		return nil
+	status, err := w.Status()
+	if err != nil {
+		return errors.Annotate(err, "Status")
+	}
+
+	logging.Info(status)
+
+	if err := w.AddGlob("./**/*"); err != nil {
+		return errors.Annotate(err, "AddGlob")
+	}
+
+	commit, err := w.Commit(message, &git.CommitOptions{
+		All: true,
+		Author: &object.Signature{
+			Name:  Name,
+			Email: Email,
+			When:  time.Now(),
+		},
 	})
+
+	if err != nil {
+		return errors.Annotate(err, "Commit")
+	}
+
+	obj, err := r.CommitObject(commit)
+	if err != nil {
+		return errors.Annotate(err, "CommitObject")
+	}
+
+	logging.Info(obj)
+	return nil
 }
