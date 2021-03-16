@@ -69,7 +69,7 @@ func EnsureBranchInRepository(path string, branchName string) error {
 	})
 }
 
-func IsRepoCleanCmd(path string) func() magelib.Cmd {
+func IsRepoCleanCmd(path string) magelib.Cmd {
 	return func() error {
 		return IsRepoClean(path)
 	}

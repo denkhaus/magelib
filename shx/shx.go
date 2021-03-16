@@ -7,7 +7,7 @@ import (
 
 // RunWithVCmd -> sh.RunWithV as chainable Cmd
 // RunWithV is like RunWith, but always sends the command's stdout to os.Stdout.
-func RunWithVCmd(env magelib.Args, cmd string, args ...string) magelib.CmdWithArgs {
+func RunWithVCmd(env magelib.ArgsMap, cmd string, args ...string) magelib.CmdWithArgs {
 	return func(args2 ...string) error {
 		return sh.RunWithV(env, cmd, append(args, args2...)...)
 	}
