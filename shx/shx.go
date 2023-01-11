@@ -1,7 +1,10 @@
 package shx
 
 import (
+	"strings"
+
 	"github.com/denkhaus/magelib"
+	"github.com/juju/errors"
 	"github.com/magefile/mage/sh"
 )
 
@@ -28,4 +31,14 @@ func RmCmd(path string) magelib.Cmd {
 	return func() error {
 		return sh.Rm(path)
 	}
+}
+
+// IsAppInstalled returns the install state of an specific app on linux systems
+func IsAppInstalled(appName string) (bool, error) {
+	out, err := sh.Output("which", appName)
+	if err != nil {
+		return false, errors.Annotate(err, "which")
+	}
+
+	return !strings.Contains(out, "not found"), nil
 }
