@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/juju/errors"
-	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
 
@@ -19,12 +18,6 @@ var (
 	GoModVendor = sh.RunCmd("go", "mod", "vendor")
 	GoModTidy   = sh.RunCmd("go", "mod", "tidy")
 )
-
-func HandleError(err error) {
-	if err != nil {
-		mg.Fatal(1, err)
-	}
-}
 
 func InDirectory(path string, cmd Cmd) (err error) {
 	path = os.ExpandEnv(path)
