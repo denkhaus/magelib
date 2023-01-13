@@ -1,7 +1,7 @@
 package magelib
 
 import (
-	"github.com/juju/errors"
+	"github.com/pkg/errors"
 	"gopkg.in/pipe.v2"
 )
 
@@ -15,7 +15,7 @@ func PipeOutCmd(fn OutCmdFunc, args ...string) pipe.Pipe {
 		output, err := fn(args...)
 		if len(output) > 0 {
 			if _, err := s.Stdout.Write([]byte(output)); err != nil {
-				return errors.Annotate(err, "write [stdout]")
+				return errors.Wrap(err, "write [stdout]")
 			}
 		}
 

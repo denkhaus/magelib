@@ -8,30 +8,39 @@ import (
 	"github.com/denkhaus/magelib"
 
 	"github.com/denkhaus/magelib/git"
-	"github.com/juju/errors"
 	"github.com/magefile/mage/sh"
+	"github.com/pkg/errors"
 )
 
 func InGoPackageDir(pkg string, fn func() error) error {
-	return magelib.InDirectory(
-		PackageDir(os.ExpandEnv(pkg)), fn,
-	)
-}
-
-func PackageDir(pkg string) string {
-	return fmt.Sprintf("%s/src/%s", Env("GOPATH"), pkg)
-}
-
-func Env(value string) string {
-	out, err := magelib.GoEnvOut(value)
-	magelib.HandleError(err)
-	if out == "" {
-		magelib.HandleError(
-			errors.Errorf("%s is undefined", value),
-		)
+	dir, err := PackageDir(os.ExpandEnv(pkg))
+	if err != nil {
+		return errors.Wrap(err, "PackageDir")
 	}
 
-	return out
+	return magelib.InDirectory(dir, fn)
+}
+
+func PackageDir(pkg string) (string, error) {
+	gopath, err := Env("GOPATH")
+	if err != nil {
+		return "", errors.Wrap(err, "Env [GOPATH]")
+	}
+
+	return fmt.Sprintf("%s/src/%s", gopath, pkg), nil
+}
+
+func Env(value string) (string, error) {
+	out, err := magelib.GoEnvOut(value)
+	if err != nil {
+		return "", errors.Wrap(err, "GoEnvOut")
+	}
+
+	if out == "" {
+		return "", errors.Errorf("%s is undefined", value)
+	}
+
+	return out, nil
 }
 
 func IsPackageCleanCmd(pkg string) magelib.Cmd {
@@ -41,11 +50,13 @@ func IsPackageCleanCmd(pkg string) magelib.Cmd {
 }
 
 func IsPackageClean(pkg string) error {
-	status, err := git.GitStatus(
-		PackageDir(pkg),
-	)
+	dir, err := PackageDir(os.ExpandEnv(pkg))
 	if err != nil {
-		return errors.Annotate(err, "GitStatus")
+		return errors.Wrap(err, "PackageDir")
+	}
+	status, err := git.GitStatus(dir)
+	if err != nil {
+		return errors.Wrap(err, "GitStatus")
 	}
 
 	return git.FormatStatusError(pkg, status)
@@ -61,7 +72,7 @@ func EnsureBranchInPackage(pkg string, branchName string) error {
 	return InGoPackageDir(pkg, func() error {
 		branch, err := git.Branch()
 		if err != nil {
-			return errors.Annotate(err, "GitBranch")
+			return errors.Wrap(err, "GitBranch")
 		}
 
 		if branch != branchName {

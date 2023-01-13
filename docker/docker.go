@@ -7,9 +7,9 @@ import (
 	"github.com/denkhaus/logging"
 	"github.com/denkhaus/magelib"
 	docker "github.com/fsouza/go-dockerclient"
-	"github.com/juju/errors"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+	"github.com/pkg/errors"
 	pipe "gopkg.in/pipe.v2"
 )
 
@@ -43,7 +43,7 @@ func RemoveUntaggedImages() error {
 	return err
 }
 
-func ContainerNameByLabel(label string) string {
+func ContainerNameByLabel(label string) (string, error) {
 	label = fmt.Sprintf("'label=%s'", label)
 	name, err := Out(
 		"ps",
@@ -52,8 +52,7 @@ func ContainerNameByLabel(label string) string {
 		"--format", "'{{.Names}}'",
 	)
 
-	magelib.HandleError(err)
-	return name
+	return name, err
 }
 
 // Build as magelib.Cmd
@@ -128,12 +127,12 @@ func BuildWithArgs(moduleDir, tag string, args magelib.ArgsMap) error {
 func ImageDigestLocal(tag string) (string, error) {
 	cli, err := docker.NewClientFromEnv()
 	if err != nil {
-		return "", errors.Annotate(err, "NewClientWithOpts")
+		return "", errors.Wrap(err, "NewClientWithOpts")
 	}
 
 	images, err := cli.ListImages(docker.ListImagesOptions{All: true})
 	if err != nil {
-		return "", errors.Annotate(err, "ListImages")
+		return "", errors.Wrap(err, "ListImages")
 	}
 
 	for _, image := range images {
@@ -168,7 +167,7 @@ func Push(tag string) error {
 func PushOnDemand(tag string) error {
 	digestLocal, err := ImageDigestLocal(tag)
 	if err != nil {
-		return errors.Annotate(err, "ImageDigestLocal")
+		return errors.Wrap(err, "ImageDigestLocal")
 	}
 
 	digestRemote, err := ImageDigestRemote(tag)
@@ -188,7 +187,7 @@ func IsImageAvailable(imageName string) bool {
 	return false
 }
 
-//RemoveLocalImage as magelib.Cmd
+// RemoveLocalImage as magelib.Cmd
 func RemoveLocalImageCmd(imageName string) magelib.Cmd {
 	return func() error {
 		return RemoveLocalImage(imageName)
@@ -199,7 +198,7 @@ func RemoveLocalImage(imageName string) error {
 	if IsImageAvailable(imageName) {
 		logging.Infof("docker: remove local image %s", imageName)
 		if err := sh.RunV("docker", "rmi", imageName); err != nil {
-			return errors.Annotate(err, "DockerOut")
+			return errors.Wrap(err, "DockerOut")
 		}
 	}
 

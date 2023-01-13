@@ -12,7 +12,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/juju/errors"
+	"github.com/pkg/errors"
 )
 
 const notRepoStatus string = "exit status 128"
@@ -71,22 +71,22 @@ func NewStatusInfo(path string) *StatusInfo {
 	return &pi
 }
 
-//IsDirty returns true if unstaged files have changed
+// IsDirty returns true if unstaged files have changed
 func (pi *StatusInfo) IsModified() bool {
 	return pi.Unstaged.hasChanged()
 }
 
-//IsDirty returns true if staged files have changed
+// IsDirty returns true if staged files have changed
 func (pi *StatusInfo) IsDirty() bool {
 	return pi.Staged.hasChanged()
 }
 
-//IsSynced returns true if repo is in sync with remote
+// IsSynced returns true if repo is in sync with remote
 func (pi *StatusInfo) IsSynced() bool {
 	return pi.ahead == 0 && pi.behind == 0
 }
 
-//Debug retrieves StatusInfo as string
+// Debug retrieves StatusInfo as string
 func (pi *StatusInfo) Debug() string {
 	return fmt.Sprintf("%#+v", pi)
 }
@@ -164,7 +164,6 @@ func (pi *StatusInfo) parseAheadBehind(s *bufio.Scanner) error {
 
 // parseTrackedFile parses the porcelain v2 output for tracked entries
 // doc: https://git-scm.com/docs/git-status#_changed_tracked_entries
-//
 func (pi *StatusInfo) parseTrackedFile(s *bufio.Scanner) error {
 	// uses the word based scanner from ParseLine
 	var index int
@@ -234,7 +233,7 @@ func GitStatusOutput(cwd string) (io.Reader, error) {
 		if err == ErrNotAGitRepo {
 			return nil, ErrNotAGitRepo
 		}
-		return nil, errors.Annotate(err, "IsInsideWorkTree")
+		return nil, errors.Wrap(err, "IsInsideWorkTree")
 	} else if !ok {
 		return nil, ErrNotAGitRepo
 	}
@@ -249,7 +248,7 @@ func GitStatusOutput(cwd string) (io.Reader, error) {
 	cmd.Dir = cwd
 
 	if err := cmd.Run(); err != nil {
-		return nil, errors.Annotatef(err,
+		return nil, errors.Wrapf(err,
 			"git status --porcelain=v2 --branch err: [%s]",
 			stderr.String(),
 		)
@@ -266,7 +265,7 @@ func PathToGitDir(cwd string) (string, error) {
 
 	out, err := cmd.Output()
 	if err != nil {
-		return "", errors.Annotatef(err,
+		return "", errors.Wrapf(err,
 			"git rev-parse --absolute-git-dir err: [%s]", stderr.String())
 	}
 
@@ -293,7 +292,7 @@ func IsInsideWorkTree(cwd string) (bool, error) {
 			return false, ErrNotAGitRepo
 		}
 
-		return false, errors.Annotatef(err,
+		return false, errors.Wrapf(err,
 			"git rev-parse --is-inside-work-tree err: [%s]",
 			stderr.String(),
 		)

@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/juju/errors"
 	"github.com/magefile/mage/sh"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -24,17 +24,17 @@ func InDirectory(path string, cmd Cmd) (err error) {
 	if !filepath.IsAbs(path) {
 		path, err = filepath.Abs(path)
 		if err != nil {
-			return errors.Annotate(err, "Abs")
+			return errors.Wrap(err, "Abs")
 		}
 	}
 
 	oldPath, err := os.Getwd()
 	if err != nil {
-		return errors.Annotate(err, "Getwd")
+		return errors.Wrap(err, "Getwd")
 	}
 
 	if err := os.Chdir(path); err != nil {
-		return errors.Annotate(err, "Chdir")
+		return errors.Wrap(err, "Chdir")
 	}
 
 	defer func(p string) {

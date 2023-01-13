@@ -47,7 +47,7 @@ func EnsureRancher() error {
 	return nil
 }
 
-func ContainerNameByLabel(host, label string) string {
+func ContainerNameByLabel(host, label string) (string, error) {
 	label = fmt.Sprintf("label=%s", label)
 	name, err := Out(
 		"--host", host,
@@ -57,8 +57,7 @@ func ContainerNameByLabel(host, label string) string {
 		"--format", "{{.Names}}",
 	)
 
-	magelib.HandleError(err)
-	return name
+	return name, err
 }
 
 // InstallRancher as magelib.Cmd

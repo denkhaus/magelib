@@ -6,8 +6,7 @@ import (
 	"time"
 
 	"github.com/denkhaus/logging"
-	"github.com/denkhaus/magelib"
-	"github.com/juju/errors"
+	"github.com/pkg/errors"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
@@ -20,16 +19,18 @@ type GitRepository struct {
 var Name = "Repo Maintainer"
 var Email = "unknown@github"
 
-func NewGitRepository(repoPath, repoURL string) *GitRepository {
+func NewGitRepository(repoPath, repoURL string) (*GitRepository, error) {
 	path, err := filepath.Abs(repoPath)
-	magelib.HandleError(err)
+	if err != nil {
+		return nil, errors.Wrap(err, "Abs")
+	}
 
 	rep := GitRepository{
 		path:    path,
 		repoURL: repoURL,
 	}
 
-	return &rep
+	return &rep, nil
 }
 
 func (p *GitRepository) Clone(w io.Writer) error {
@@ -39,7 +40,7 @@ func (p *GitRepository) Clone(w io.Writer) error {
 	})
 
 	if err != nil {
-		return errors.Annotate(err, "PlainClone")
+		return errors.Wrap(err, "PlainClone")
 	}
 
 	return nil
@@ -48,23 +49,23 @@ func (p *GitRepository) Clone(w io.Writer) error {
 func (p *GitRepository) CommitAll(message string) error {
 	r, err := git.PlainOpen(p.path)
 	if err != nil {
-		return errors.Annotate(err, "PlainOpen")
+		return errors.Wrap(err, "PlainOpen")
 	}
 
 	w, err := r.Worktree()
 	if err != nil {
-		return errors.Annotate(err, "Worktree")
+		return errors.Wrap(err, "Worktree")
 	}
 
 	status, err := w.Status()
 	if err != nil {
-		return errors.Annotate(err, "Status")
+		return errors.Wrap(err, "Status")
 	}
 
 	logging.Info(status)
 
 	if err := w.AddGlob("./**/*"); err != nil {
-		return errors.Annotate(err, "AddGlob")
+		return errors.Wrap(err, "AddGlob")
 	}
 
 	commit, err := w.Commit(message, &git.CommitOptions{
@@ -77,12 +78,12 @@ func (p *GitRepository) CommitAll(message string) error {
 	})
 
 	if err != nil {
-		return errors.Annotate(err, "Commit")
+		return errors.Wrap(err, "Commit")
 	}
 
 	obj, err := r.CommitObject(commit)
 	if err != nil {
-		return errors.Annotate(err, "CommitObject")
+		return errors.Wrap(err, "CommitObject")
 	}
 
 	logging.Info(obj)

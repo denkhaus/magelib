@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/denkhaus/magelib"
-	"github.com/juju/errors"
 	"github.com/magefile/mage/sh"
+	"github.com/pkg/errors"
 )
 
 // RunWithVCmd -> sh.RunWithV as chainable Cmd
@@ -37,7 +37,7 @@ func RmCmd(path string) magelib.Cmd {
 func IsAppInstalled(appName string) (bool, error) {
 	out, err := sh.Output("which", appName)
 	if err != nil {
-		return false, errors.Annotate(err, "which")
+		return false, errors.Wrap(err, "which")
 	}
 
 	return !strings.Contains(out, "not found"), nil
