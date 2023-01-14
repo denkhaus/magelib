@@ -45,9 +45,6 @@ func (suite *magelibTest) TestGitCommit() {
 		suite.FailNow("CommitObject")
 	}
 	fmt.Println(commit.String())
-
-	//suite.True(sa.Modified(), "StructAccessor modified")
-	//suite.Equal(2, mediatorR.Audios.Count(), "MultiObject Count")
 }
 
 func TestCommon(t *testing.T) {

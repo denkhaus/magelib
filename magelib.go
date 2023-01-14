@@ -9,14 +9,14 @@ import (
 )
 
 var (
-	MkTempDir   = sh.OutCmd("mktemp", "-d")
-	GoInstall   = sh.RunCmd("go", "install")
-	GoUpdate    = sh.RunCmd("go", "get", "-u")
-	GoGet       = sh.RunCmd("go", "get")
-	GoEnvOut    = sh.OutCmd("go", "env")
-	GoModOut    = sh.RunCmd("go", "mod")
-	GoModVendor = sh.RunCmd("go", "mod", "vendor")
-	GoModTidy   = sh.RunCmd("go", "mod", "tidy")
+	MkTempDirOut = sh.OutCmd("mktemp", "-d")
+	GoInstall    = sh.RunCmd("go", "install")
+	GoUpdate     = sh.RunCmd("go", "get", "-u")
+	GoGet        = sh.RunCmd("go", "get")
+	GoEnvOut     = sh.OutCmd("go", "env")
+	GoMod        = sh.RunCmd("go", "mod")
+	GoModVendor  = sh.RunCmd("go", "mod", "vendor")
+	GoModTidy    = sh.RunCmd("go", "mod", "tidy")
 )
 
 func InDirectory(path string, cmd Cmd) (err error) {
