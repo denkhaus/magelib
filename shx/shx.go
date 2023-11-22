@@ -3,6 +3,7 @@ package shx
 import (
 	"strings"
 
+	"github.com/denkhaus/logging"
 	"github.com/denkhaus/magelib"
 	"github.com/magefile/mage/sh"
 	"github.com/pkg/errors"
@@ -37,6 +38,7 @@ func RmCmd(path string) magelib.Cmd {
 func IsAppInstalled(appName string) (bool, error) {
 	out, err := sh.Output("which", appName)
 	if err != nil {
+		logging.Errorf("error while running 'which' -> %s", out)
 		return false, errors.Wrap(err, "which")
 	}
 
