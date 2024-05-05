@@ -12,6 +12,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	UpdatePackage = sh.RunCmd("go", "get", "-u")
+	Mod           = sh.RunCmd("go", "mod")
+)
+
 func InGoPackageDir(pkg string, fn func() error) error {
 	dir, err := PackageDir(os.ExpandEnv(pkg))
 	if err != nil {
@@ -113,4 +118,16 @@ func UpdateGoModule(path string, vendor bool) error {
 			logging.Info("run -> go mod vendor")
 			return sh.RunWithV(env, "go", "mod", "vendor")
 		}))
+}
+
+func UpdatePackageCmd(packageName string) magelib.Cmd {
+	return func() error {
+		return UpdatePackage(packageName)
+	}
+}
+
+func ModTidyCmd() magelib.Cmd {
+	return func() error {
+		return Mod("tidy")
+	}
 }
