@@ -8,19 +8,20 @@ import (
 	"github.com/denkhaus/magelib"
 
 	"github.com/denkhaus/magelib/git"
+	"github.com/denkhaus/magelib/shx"
 	"github.com/magefile/mage/sh"
-	"github.com/pkg/errors"
 )
 
 var (
-	UpdatePackage = sh.RunCmd("go", "get", "-u")
-	Mod           = sh.RunCmd("go", "mod")
+	UpdatePackage  = sh.RunCmd("go", "get", "-u")
+	InstallPackage = sh.RunCmd("go", "install")
+	Mod            = sh.RunCmd("go", "mod")
 )
 
 func InGoPackageDir(pkg string, fn func() error) error {
 	dir, err := PackageDir(os.ExpandEnv(pkg))
 	if err != nil {
-		return errors.Wrap(err, "PackageDir")
+		return magelib.Fatal(err, "PackageDir")
 	}
 
 	return magelib.InDirectory(dir, fn)
@@ -29,7 +30,7 @@ func InGoPackageDir(pkg string, fn func() error) error {
 func PackageDir(pkg string) (string, error) {
 	gopath, err := Env("GOPATH")
 	if err != nil {
-		return "", errors.Wrap(err, "Env [GOPATH]")
+		return "", magelib.Fatal(err, "Env [GOPATH]")
 	}
 
 	return fmt.Sprintf("%s/src/%s", gopath, pkg), nil
@@ -38,11 +39,11 @@ func PackageDir(pkg string) (string, error) {
 func Env(value string) (string, error) {
 	out, err := magelib.GoEnvOut(value)
 	if err != nil {
-		return "", errors.Wrap(err, "GoEnvOut")
+		return "", magelib.Fatal(err, "GoEnvOut")
 	}
 
 	if out == "" {
-		return "", errors.Errorf("%s is undefined", value)
+		return "", magelib.Fatalf("%s is undefined", value)
 	}
 
 	return out, nil
@@ -57,11 +58,11 @@ func IsPackageCleanCmd(pkg string) magelib.Cmd {
 func IsPackageClean(pkg string) error {
 	dir, err := PackageDir(os.ExpandEnv(pkg))
 	if err != nil {
-		return errors.Wrap(err, "PackageDir")
+		return magelib.Fatal(err, "PackageDir")
 	}
 	status, err := git.GitStatus(dir)
 	if err != nil {
-		return errors.Wrap(err, "GitStatus")
+		return magelib.Fatal(err, "GitStatus")
 	}
 
 	return git.FormatStatusError(pkg, status)
@@ -77,7 +78,7 @@ func EnsureBranchInPackage(pkg string, branchName string) error {
 	return InGoPackageDir(pkg, func() error {
 		branch, err := git.Branch()
 		if err != nil {
-			return errors.Wrap(err, "GitBranch")
+			return magelib.Fatal(err, "GitBranch")
 		}
 
 		if branch != branchName {
@@ -129,5 +130,25 @@ func UpdatePackageCmd(packageName string) magelib.Cmd {
 func ModTidyCmd() magelib.Cmd {
 	return func() error {
 		return Mod("tidy")
+	}
+}
+
+func InstallPackageCmd(packageName string) magelib.Cmd {
+	return func() error {
+		return InstallPackage(packageName)
+	}
+}
+
+func EnsurePackageInstalledCmd(appName string, packageName string) magelib.Cmd {
+	return func() error {
+		ok, err := shx.IsAppInstalled(appName)
+		if err != nil {
+			return magelib.Fatal(err, "IsAppInstalled")
+		}
+		if !ok {
+			return InstallPackage(packageName)
+		}
+
+		return nil
 	}
 }
