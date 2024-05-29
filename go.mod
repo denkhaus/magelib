@@ -1,6 +1,6 @@
 module github.com/denkhaus/magelib
 
-go 1.22
+go 1.22.0
 
 require (
 	github.com/denkhaus/logging v0.0.0-20180714213349-14bfb935047c
