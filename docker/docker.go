@@ -110,7 +110,7 @@ func BuildWithArgs(moduleDir, tag string, args magelib.ArgsMap) error {
 		params = append(params, buildArgs...)
 		params = append(params, ".")
 
-		logging.Infof("params", params)
+		logging.Info("params", params)
 		output, err := Out(params...)
 		logging.Println(output)
 
