@@ -164,6 +164,12 @@ func Push(tag string) error {
 	return sh.RunV("docker", "push", tag)
 }
 
+func PushCmd(tag string) magelib.Cmd {
+	return func() error {
+		return Push(tag)
+	}
+}
+
 func PushOnDemand(tag string) error {
 	digestLocal, err := ImageDigestLocal(tag)
 	if err != nil {
@@ -177,6 +183,12 @@ func PushOnDemand(tag string) error {
 	}
 
 	return Push(tag)
+}
+
+func PushOnDemandCmd(tag string) magelib.Cmd {
+	return func() error {
+		return PushOnDemand(tag)
+	}
 }
 
 func IsImageAvailable(imageName string) bool {
