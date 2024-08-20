@@ -20,13 +20,13 @@ func NextVersion(ctx context.Context, maxCount uint) (string, error) {
 
 	version := semver.Parse(tag)
 
-	if version.VersionCore.Patch == maxCount {
+	if version.VersionCore.Patch >= maxCount {
 		version.VersionCore.Patch = 0
 		version.BumpMinor()
 		return version.String(), nil
 	}
 
-	if version.VersionCore.Minor == maxCount {
+	if version.VersionCore.Minor >= maxCount {
 		version.VersionCore.Minor = 0
 		version.BumpMajor()
 		return version.String(), nil
