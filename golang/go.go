@@ -18,6 +18,11 @@ var (
 	Mod            = sh.RunCmd("go", "mod")
 )
 
+// InGoPackageDir executes a function within the directory of a Go package in GOPATH.
+//
+// pkg: the name of the Go package.
+// fn: the function to be executed within the package directory.
+// error: any error that occurred during execution.
 func InGoPackageDir(pkg string, fn func() error) error {
 	dir, err := PackageDir(os.ExpandEnv(pkg))
 	if err != nil {
@@ -27,6 +32,11 @@ func InGoPackageDir(pkg string, fn func() error) error {
 	return magelib.InDirectory(dir, fn)
 }
 
+// PackageDir returns the directory path of a Go package in GOPATH.
+//
+// pkg: the name of the Go package.
+// string: the directory path of the Go package.
+// error: any error that occurred while retrieving the directory path.
 func PackageDir(pkg string) (string, error) {
 	gopath, err := Env("GOPATH")
 	if err != nil {
@@ -36,6 +46,11 @@ func PackageDir(pkg string) (string, error) {
 	return fmt.Sprintf("%s/src/%s", gopath, pkg), nil
 }
 
+// Env returns the value of the specified golang environment variable.
+//
+// value: the name of the environment variable to retrieve.
+// string: the value of the environment variable, or an empty string if it is undefined.
+// error: any error that occurred while retrieving the environment variable value.
 func Env(value string) (string, error) {
 	out, err := magelib.GoEnvOut(value)
 	if err != nil {
@@ -49,12 +64,24 @@ func Env(value string) (string, error) {
 	return out, nil
 }
 
+// IsPackageCleanCmd returns a function that checks if a Go package is clean.
+//
+// pkg: the path to the Go package.
+// magelib.Cmd: a function that returns an error if the package is not clean.
 func IsPackageCleanCmd(pkg string) magelib.Cmd {
 	return func() error {
 		return IsPackageClean(pkg)
 	}
 }
 
+// IsPackageClean checks if a Go package has
+// unstaged files that have been changed in repo
+// or staged files have been modified in repo
+// or repo is not in sync with the remote repo
+//
+// path is the path to the repository.
+// status is the status information of the repository.
+// Returns an error if the repository status is not valid, otherwise nil.
 func IsPackageClean(pkg string) error {
 	dir, err := PackageDir(os.ExpandEnv(pkg))
 	if err != nil {
@@ -68,12 +95,24 @@ func IsPackageClean(pkg string) error {
 	return git.FormatStatusError(pkg, status)
 }
 
+// EnsureBranchInPackageCmd returns a function that ensures a specific branch is checked out in a Go package.
+//
+// pkg: the path to the Go package.
+// branchName: the name of the branch to ensure.
+//
+// magelib.Cmd: a function that returns an error if there was a problem ensuring the branch.
 func EnsureBranchInPackageCmd(pkg string, branchName string) magelib.Cmd {
 	return func() error {
 		return EnsureBranchInPackage(pkg, branchName)
 	}
 }
 
+// EnsureBranchInPackage ensures that a specific branch is checked out in a Go package.
+//
+// pkg: the path to the Go package.
+// branchName: the name of the branch to ensure.
+//
+// error: an error if there was a problem ensuring the branch.
 func EnsureBranchInPackage(pkg string, branchName string) error {
 	return InGoPackageDir(pkg, func() error {
 		branch, err := git.Branch()
@@ -91,18 +130,30 @@ func EnsureBranchInPackage(pkg string, branchName string) error {
 	})
 }
 
+// UpdateModuleCmd returns a command that updates the Go module at the specified path.
+//
+// path: the directory path where the Go module is located.
+// vendor: a boolean indicating whether to vendor the dependencies.
+//
+// magelib.Cmd: a command that updates the Go module.
 func UpdateModuleCmd(path string, vendor bool) magelib.Cmd {
 	return func() error {
 		return UpdateGoModule(path, vendor)
 	}
 }
 
+// UpdateGoModule updates the Go module at the specified path.
+//
+// path: the directory path where the Go module is located.
+// vendor: a boolean indicating whether to vendor the dependencies.
+//
+// error: an error if the update operation fails.
 func UpdateGoModule(path string, vendor bool) error {
 	env := magelib.ArgsMap{
 		"GO111MODULE": "on",
 	}
 
-	return magelib.InDirectory(path, magelib.ChainCmdsCmd(
+	return magelib.InDirectory(path, magelib.ChainCmds(
 		func() error {
 			logging.Info("run -> go get -d")
 			return sh.RunWithV(env, "go", "get", "-d")

@@ -35,6 +35,11 @@ func GitStatus(path string) (*StatusInfo, error) {
 	return info, nil
 }
 
+// FormatStatusError returns an error if the repository status is not valid.
+//
+// path is the path to the repository.
+// status is the status information of the repository.
+// Returns an error if the repository status is not valid, otherwise nil.
 func FormatStatusError(path string, status *StatusInfo) error {
 	if status.IsDirty() {
 		return errors.Errorf("unstaged files have been changed in repo %q", path)
@@ -168,9 +173,9 @@ func IsCommitTagged(commit string) (bool, error) {
 	return false, nil
 }
 
-// MostRecentTag retrieves the current tag of a Git repository at the specified path.
+// MostRecentTag retrieves the most recent tag in a Git repository.
 //
-// It takes a path string as a parameter and returns a string representing the current tag and an error.
+// It returns the tag string and an error if any occurred.
 func MostRecentTag() (tag string, err error) {
 	tag, err = sh.Output("git", "describe", "--tags", "--abbrev=0")
 	if err != nil {
